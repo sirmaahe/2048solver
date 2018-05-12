@@ -55,8 +55,6 @@ class Game:
         self.web_driver.close()
 
 
-game = Game()
-
-if __name__ == '__main__':
-    for _ in range(3):
-        game.move('up')
+# if __name__ == '__main__':
+#     for _ in range(3):
+#         game.move('up')

@@ -1,7 +1,6 @@
 import math
 from functools import reduce
 from operator import add
-from game_interface import game
 
 
 DIRECTIONS = ['up', 'down', 'left', 'right']
@@ -18,22 +17,18 @@ def calculate_neuron(prev, weights):
     return neuron
 
 
-def score(network):
+def score(network, game):
     game.restart()
 
     prev_elements = []
-    attempt = 0
-    while not game.is_over() and attempt <= 3:
+    while not game.is_over():
         prev_layer = game.elements
         current_elements = game.elements
 
         if prev_elements == current_elements:
-            attempt += 1
+            break
         else:
-            attempt = 0
             prev_elements = current_elements
-
-        prev_layer.append(attempt)
 
         for layer in network:
             prev_layer = [calculate_neuron(prev_layer, n) for n in layer]
