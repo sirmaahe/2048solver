@@ -24,7 +24,7 @@ def generate(generations, population, nn_param_choices):
     """
     optimizer = Optimizer(nn_param_choices)
     networks = optimizer.create_population(population)
-    games = [Game() for _ in range(2)]
+    games = [Game() for _ in range(4)]
     processes_manager = Manager()
     return_dict = processes_manager.dict()
 
@@ -33,15 +33,21 @@ def generate(generations, population, nn_param_choices):
         print("**Doing generation %d of %d**" %
                      (i + 1, generations))
 
-        for j in range(0, len(networks), 2):
+        for j in range(0, len(networks), 4):
             p1 = Process(target=pool_score, args=(networks[j].network, games[0], j, return_dict))
             p2 = Process(target=pool_score, args=(networks[j + 1].network, games[1], j + 1, return_dict))
+            p3 = Process(target=pool_score, args=(networks[j + 2].network, games[2], j + 2, return_dict))
+            p4= Process(target=pool_score, args=(networks[j + 3].network, games[3], j + 3, return_dict))
 
             p1.start()
             p2.start()
+            p3.start()
+            p4.start()
 
             p1.join()
             p2.join()
+            p3.join()
+            p4.join()
 
         for k, v in return_dict.items():
             networks[k].score = v

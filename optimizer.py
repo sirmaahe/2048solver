@@ -21,7 +21,7 @@ def zip_longest_wrapper(one, two):
 class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_ranges, retain=0.15,
+    def __init__(self, nn_param_ranges, retain=0.25,
                  random_select=0.1, mutate_chance=0.2):
         """Create an optimizer.
 
