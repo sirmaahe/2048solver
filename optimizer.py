@@ -22,7 +22,7 @@ class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
     def __init__(self, nn_param_ranges, retain=0.25,
-                 random_select=0.1, mutate_chance=0.2):
+                 random_select=0.1, random_create=0.1, mutate_chance=0.05):
         """Create an optimizer.
 
         Args:
@@ -37,6 +37,7 @@ class Optimizer:
         """
         self.mutate_chance = mutate_chance
         self.random_select = random_select
+        self.random_create = random_create
         self.retain = retain
         self.nn_param_ranges = nn_param_ranges
 
@@ -80,34 +81,20 @@ class Optimizer:
         children = []
         for _ in range(2):
             child = []
-            for (m_l, f_l) in zip_longest_wrapper(mother.network, father.network):
-                chance = random.choice([m_l, f_l])
-                if chance:
-                    layer = []
-                    for (m_n, f_n) in zip_longest_wrapper(m_l, f_l):
-                        neuron = []
-                        for (m_w, f_w) in zip_longest_wrapper(m_n, f_n):
-                            m_w = m_w or f_w
-                            f_w = f_w or m_w
-                            weight = random.choice([m_w, f_w])
-                            neuron.append(weight)
-                        layer.append(neuron)
-                    if layer:
-                        child.append(layer)
+            for m_l, f_l in zip(mother.network, father.network):
+                layer = []
+                for m_n, f_n in zip(m_l, f_l):
+                    neuron = []
+                    for m_w, f_w in zip(m_n, f_n):
+                        neuron.append((m_w + f_w) / 2)
+                    layer.append(neuron)
+                child.append(layer)
 
-            m_l, f_l = (mother.network[-1], father.network[-1])
-            layer = []
-            for (m_n, f_n) in zip_longest_wrapper(m_l, f_l):
-                neuron = random.choice([m_n, f_n])
-                layer.append(neuron)
-            child[-1] = layer
-            # Now create a network object.
             network = Network(self.nn_param_ranges)
             network.create_set(child)
 
             # Randomly mutate some of the children.
-            if self.mutate_chance > random.random():
-                network = self.mutate(network)
+            network = self.mutate(network)
 
             children.append(network)
 
@@ -124,46 +111,11 @@ class Optimizer:
 
         """
         network = n.network
-        while random.random() <= 0.02:
-            hidden_layer_end = len(network) - 2
-            if hidden_layer_end == 0:
-                layer_index = 1
-            else:
-                layer_index = random.randint(1, hidden_layer_end)
-            if random.random() >= 0.5:
-                if hidden_layer_end == 0:
-                    break
-                del network[layer_index]
-            else:
-                new_layer = [
-                    [
-                        random.uniform(*self.nn_param_ranges['weight'])
-                        for _ in range(len(network[layer_index - 1]))
-                    ]
-                    for _ in range(random.randint(*self.nn_param_ranges['neurons']))
-                ]
-                network.insert(layer_index, new_layer)
-
         for i, layer in enumerate(network):
             for j, neuron in enumerate(layer):
                 for k, weight in enumerate(neuron):
-                    if random.random() <= 0.20:
-                        neuron[k] = weight * random.uniform(0, 2)
-
-            if i in [0, len(network) - 1]:
-                continue
-
-            while random.random() <= 0.1:
-                neuron_index = random.randint(0, len(layer) - 1)
-                if random.random() >= 0.5:
-                    del layer[neuron_index]
-                else:
-                    new_neuron = [
-                        random.uniform(*self.nn_param_ranges['weight'])
-                        for _ in range(len(network[i - 1]))
-                    ]
-                    layer.insert(neuron_index, new_neuron)
-
+                    if random.random() <= 0.01:
+                        neuron[k] = weight * random.uniform(-2, 2)
         return n
 
     def evolve(self, pop):
@@ -189,6 +141,10 @@ class Optimizer:
         for individual in graded[retain_length:]:
             if self.random_select > random.random():
                 parents.append(individual)
+        if self.random_create > random.random():
+            network = Network(self.nn_param_ranges)
+            network.create_random()
+            parents.append(network)
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)

@@ -1,6 +1,5 @@
 """Entry point to evolving the neural network. Start here."""
 import json
-import time
 from multiprocessing import Process, Manager
 from functools import reduce
 from game_interface import Game
@@ -10,6 +9,10 @@ from run import score
 
 def pool_score(network, game, i, return_dict):
     return_dict[i] = score(network, game)
+
+
+processes = 5
+games = [Game() for _ in range(processes)]
 
 
 def generate(generations, population, nn_param_choices):
@@ -24,30 +27,22 @@ def generate(generations, population, nn_param_choices):
     """
     optimizer = Optimizer(nn_param_choices)
     networks = optimizer.create_population(population)
-    games = [Game() for _ in range(4)]
     processes_manager = Manager()
     return_dict = processes_manager.dict()
 
     # Evolve the generation.
     for i in range(generations):
-        print("**Doing generation %d of %d**" %
-                     (i + 1, generations))
+        print("**Doing generation %d of %d**" % (i + 1, generations))
 
-        for j in range(0, len(networks), 4):
-            p1 = Process(target=pool_score, args=(networks[j].network, games[0], j, return_dict))
-            p2 = Process(target=pool_score, args=(networks[j + 1].network, games[1], j + 1, return_dict))
-            p3 = Process(target=pool_score, args=(networks[j + 2].network, games[2], j + 2, return_dict))
-            p4= Process(target=pool_score, args=(networks[j + 3].network, games[3], j + 3, return_dict))
+        for j in range(0, len(networks), processes):
+            jobs = []
+            for k in range(processes):
+                jobs.append(
+                    Process(target=pool_score, args=(networks[j + k].network, games[k], j + k, return_dict))
+                )
 
-            p1.start()
-            p2.start()
-            p3.start()
-            p4.start()
-
-            p1.join()
-            p2.join()
-            p3.join()
-            p4.join()
+            [p.start() for p in jobs]
+            [p.join() for p in jobs]
 
         for k, v in return_dict.items():
             networks[k].score = v
@@ -79,14 +74,13 @@ def generate(generations, population, nn_param_choices):
 
 def main():
     """Evolve a network."""
-    generations = 200  # Number of times to evole the population.
-    population = 20  # Number of networks in each generation.
+    generations = 2000  # Number of times to evole the population.
+    population = 10  # Number of networks in each generation.
 
     nn_param_choices = {
-        'neurons': [1, 64],
-        'layers': [1, 4],
+        # 'neurons': [1, 64],
+        # 'layers': [1, 4],
         'weight': [-1, 1]
-
     }
 
     print("**Evolving %d generations with population %d**" %
@@ -96,4 +90,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        [g.close() for g in games]
+        raise e

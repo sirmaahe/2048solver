@@ -6,7 +6,7 @@ class Game:
     def __init__(self):
         self.web_driver = webdriver.Chrome(executable_path='./chromedriver')
         self.web_driver.set_window_size(350, 600)
-        self.web_driver.get("https://gabrielecirulli.github.io/2048/")
+        self.web_driver.get("file:///home/turbo/PycharmProjects/2048solver/site/2048.html")
 
     @property
     def elements(self):
