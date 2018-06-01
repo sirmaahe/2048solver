@@ -45,10 +45,10 @@ def generate(generations, population, nn_param_choices):
             [p.join() for p in jobs]
 
         for k, v in return_dict.items():
-            networks[k].score = v
+            networks[k].human_score, networks[k].score = v
 
         # Get the average accuracy for this generation.
-        average_accuracy = reduce(lambda x, y: x + y, (n.score for n in networks)) / population
+        average_accuracy = reduce(lambda x, y: x + y, (n.human_score for n in networks)) / population
 
         # Print out the average accuracy each generation.
         print("Generation average: {}".format(average_accuracy))
@@ -66,7 +66,7 @@ def generate(generations, population, nn_param_choices):
                 print("Writing checkpoint")
                 json.dump([n.network for n in networks], checkpoint)
     # Sort our final population.
-    networks = sorted(networks, key=lambda x: x.score, reverse=True)
+    networks = sorted(networks, key=lambda x: x.human_score, reverse=True)
 
     # Print out the top 5 networks.
     print([n.network for n in networks[:5]])
@@ -75,7 +75,7 @@ def generate(generations, population, nn_param_choices):
 def main():
     """Evolve a network."""
     generations = 2000  # Number of times to evole the population.
-    population = 10  # Number of networks in each generation.
+    population = 20  # Number of networks in each generation.
 
     nn_param_choices = {
         # 'neurons': [1, 64],

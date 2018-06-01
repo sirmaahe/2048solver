@@ -14,6 +14,11 @@ class Network:
 
         network.append([
             [random.uniform(*[-1, 1]) for _ in range(50)]
+            for _ in range(50)
+        ])
+
+        network.append([
+            [random.uniform(*[-1, 1]) for _ in range(50)]
             for _ in range(4)
         ])
         self.network = network

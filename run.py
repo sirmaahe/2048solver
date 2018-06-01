@@ -21,6 +21,7 @@ def score(network, game):
     game.restart()
 
     prev_elements = []
+    steps = 1
     while not game.is_over():
         prev_layer = game.elements
         current_elements = game.elements
@@ -36,5 +37,5 @@ def score(network, game):
         max_neuron = max(enumerate(prev_layer), key=lambda x: x[1])
         direction = DIRECTIONS[max_neuron[0]]
         game.move(direction)
-
-    return game.score
+        steps += 1
+    return game.score, game.score / steps
