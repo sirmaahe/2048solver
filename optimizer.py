@@ -21,8 +21,8 @@ def zip_longest_wrapper(one, two):
 class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_ranges, retain=0.25,
-                 random_select=0.1, random_create=0.2, mutate_chance=0.05):
+    def __init__(self, nn_param_ranges, retain=0.10,
+                 random_select=0.05, random_create=0.2, mutate_chance=0.1):
         """Create an optimizer.
 
         Args:
@@ -114,8 +114,8 @@ class Optimizer:
         for i, layer in enumerate(network):
             for j, neuron in enumerate(layer):
                 for k, weight in enumerate(neuron):
-                    if random.random() <= 0.01:
-                        neuron[k] = weight * random.uniform(-2, 2)
+                    if random.random() <= self.mutate_chance:
+                        neuron[k] = weight + weight * random.uniform(-1, 1)
         return n
 
     def evolve(self, pop):

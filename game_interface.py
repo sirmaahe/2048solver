@@ -1,4 +1,3 @@
-from time import sleep
 from selenium import webdriver
 
 
@@ -50,7 +49,6 @@ class Game:
             'right': '\ue014',
         }[direction]
         self.web_driver.find_element_by_tag_name('body').send_keys(code)
-        sleep(0.1)
 
     def close(self):
         self.web_driver.close()

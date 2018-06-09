@@ -10,15 +10,10 @@ class Network:
         self.network = []
 
     def create_random(self):
-        network = [[[random.uniform(*[-1, 1]) for _ in range(16)] for _ in range(50)]]
+        network = [[[random.uniform(*[-1, 1]) for _ in range(16)] for _ in range(28)]]
 
         network.append([
-            [random.uniform(*[-1, 1]) for _ in range(50)]
-            for _ in range(50)
-        ])
-
-        network.append([
-            [random.uniform(*[-1, 1]) for _ in range(50)]
+            [random.uniform(*[-1, 1]) for _ in range(28)]
             for _ in range(4)
         ])
         self.network = network

@@ -11,7 +11,7 @@ def pool_score(network, game, i, return_dict):
     return_dict[i] = score(network, game)
 
 
-processes = 5
+processes = 10
 games = [Game() for _ in range(processes)]
 
 
@@ -75,7 +75,7 @@ def generate(generations, population, nn_param_choices):
 def main():
     """Evolve a network."""
     generations = 2000  # Number of times to evole the population.
-    population = 20  # Number of networks in each generation.
+    population = 40  # Number of networks in each generation.
 
     nn_param_choices = {
         # 'neurons': [1, 64],
