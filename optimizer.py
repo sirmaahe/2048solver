@@ -21,8 +21,8 @@ def zip_longest_wrapper(one, two):
 class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_ranges, retain=0.10,
-                 random_select=0.05, random_create=0.2, mutate_chance=0.1):
+    def __init__(self, nn_param_ranges, retain=0.20,
+                 random_select=0.05, random_create=1, mutate_chance=0.1):
         """Create an optimizer.
 
         Args:
@@ -136,19 +136,19 @@ class Optimizer:
 
         # The parents are every network we want to keep.
         parents = graded[:retain_length]
-
+        result = []
         # For those we aren't keeping, randomly keep some anyway.
         for individual in graded[retain_length:]:
             if self.random_select > random.random():
-                parents.append(individual)
+                result.append(individual)
         if self.random_create > random.random():
             network = Network(self.nn_param_ranges)
             network.create_random()
-            parents.append(network)
+            result.append(network)
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)
-        desired_length = len(pop) - parents_length
+        desired_length = len(pop) - len(result)
         children = []
 
         # Add children, which are bred from two remaining networks.
@@ -172,6 +172,6 @@ class Optimizer:
                     if len(children) < desired_length:
                         children.append(baby)
 
-        parents.extend(children)
+        result.extend(children)
 
-        return parents
+        return result

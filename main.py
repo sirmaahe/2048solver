@@ -12,7 +12,6 @@ def pool_score(network, game, i, return_dict):
 
 
 processes = 10
-games = [Game() for _ in range(processes)]
 
 
 def generate(generations, population, nn_param_choices):
@@ -38,7 +37,7 @@ def generate(generations, population, nn_param_choices):
             jobs = []
             for k in range(processes):
                 jobs.append(
-                    Process(target=pool_score, args=(networks[j + k].network, games[k], j + k, return_dict))
+                    Process(target=pool_score, args=(networks[j + k].network, Game(), j + k, return_dict))
                 )
 
             [p.start() for p in jobs]
@@ -61,7 +60,7 @@ def generate(generations, population, nn_param_choices):
             for network in networks:
                 network._score = None
 
-        if i % 10 == 0:
+        if i % 5 == 0:
             with open('./checkpoint.json', 'w') as checkpoint:
                 print("Writing checkpoint")
                 json.dump([n.network for n in networks], checkpoint)
@@ -90,8 +89,4 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        [g.close() for g in games]
-        raise e
+    main()

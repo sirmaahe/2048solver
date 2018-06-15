@@ -18,11 +18,9 @@ def calculate_neuron(prev, weights):
 
 
 def score(network, game):
-    game.restart()
-
     prev_elements = []
     steps = 1
-    while not game.is_over():
+    while True:
         prev_layer = game.elements
         current_elements = game.elements
 
