@@ -185,7 +185,7 @@ class NeuronOptimizer:
         self.random_select = random_select
         self.random_create = random_create
         self.retain = retain
-        self.range = (1, 128)
+        self.range = (1, 50)
 
     def create_population(self, count):
         pop = []

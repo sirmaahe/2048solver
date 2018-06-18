@@ -16,7 +16,7 @@ def pool_score(network, game, i, return_dict):
 
 
 def pool_gen(neurons, i, return_dict):
-    return_dict[i] = score_param(10000, 40, neurons['count'])
+    return_dict[i] = score_param(2000, 40, neurons['count'])
 
 
 processes = 5
@@ -60,15 +60,16 @@ def generate(generations, population):
     for i in range(200):
         print("**Doing generation %d of %d**" % (i + 1, 200))
 
-        for j in range(0, len(neurons), processes):
-            jobs = []
-            for k in range(processes):
-                jobs.append(
-                    Process(target=pool_gen, args=(neurons[j + k], j + k, return_dict))
-                )
-
-            [p.start() for p in jobs]
-            [p.join() for p in jobs]
+        for j in range(0, len(neurons)):
+            # jobs = []
+            # for k in range(processes):
+            #     jobs.append(
+            #         Process(target=pool_gen, args=(neurons[j + k], j + k, return_dict))
+            #     )
+            #
+            # [p.start() for p in jobs]
+            # [p.join() for p in jobs]
+            pool_gen(neurons[j], j, return_dict)
 
         for k, v in return_dict.items():
             neurons[k]['score'] = sum([n.score for n in v[:5]]) / 5
