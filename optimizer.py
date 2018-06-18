@@ -21,7 +21,7 @@ def zip_longest_wrapper(one, two):
 class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_ranges, retain=0.20,
+    def __init__(self, neurons, retain=0.20,
                  random_select=0.05, random_create=1, mutate_chance=0.1):
         """Create an optimizer.
 
@@ -39,7 +39,7 @@ class Optimizer:
         self.random_select = random_select
         self.random_create = random_create
         self.retain = retain
-        self.nn_param_ranges = nn_param_ranges
+        self.neurons = neurons
 
     def create_population(self, count):
         """Create a population of random networks.
@@ -56,7 +56,7 @@ class Optimizer:
             with open('checkpoint.json') as checkpoint:
                 networks = json.load(checkpoint)
 
-            pop = [Network(self.nn_param_ranges) for _ in range(0, count)]
+            pop = [Network(self.neurons) for _ in range(0, count)]
 
             for n, loaded in zip_longest(pop, networks):
                 if loaded is None:
@@ -69,7 +69,7 @@ class Optimizer:
         pop = []
         for _ in range(0, count):
             # Create a random network.
-            network = Network(self.nn_param_ranges)
+            network = Network(self.neurons)
             network.create_random()
 
             # Add the network to our population.
@@ -90,7 +90,7 @@ class Optimizer:
                     layer.append(neuron)
                 child.append(layer)
 
-            network = Network(self.nn_param_ranges)
+            network = Network(self.neurons)
             network.create_set(child)
 
             # Randomly mutate some of the children.
@@ -142,9 +142,80 @@ class Optimizer:
             if self.random_select > random.random():
                 result.append(individual)
         if self.random_create > random.random():
-            network = Network(self.nn_param_ranges)
+            network = Network(self.neurons)
             network.create_random()
             result.append(network)
+
+        # Now find out how many spots we have left to fill.
+        parents_length = len(parents)
+        desired_length = len(pop) - len(result)
+        children = []
+
+        # Add children, which are bred from two remaining networks.
+        while len(children) < desired_length:
+
+            # Get a random mom and dad.
+            male = random.randint(0, parents_length-1)
+            female = random.randint(0, parents_length-1)
+
+            # Assuming they aren't the same network...
+            if male != female:
+                male = parents[male]
+                female = parents[female]
+
+                # Breed them.
+                babies = self.breed(male, female)
+
+                # Add the children one at a time.
+                for baby in babies:
+                    # Don't grow larger than desired length.
+                    if len(children) < desired_length:
+                        children.append(baby)
+
+        result.extend(children)
+
+        return result
+
+
+class NeuronOptimizer:
+    """Class that implements genetic algorithm for MLP optimization."""
+
+    def __init__(self, retain=0.20, random_select=0.05, random_create=1, mutate_chance=0.1):
+        self.mutate_chance = mutate_chance
+        self.random_select = random_select
+        self.random_create = random_create
+        self.retain = retain
+        self.range = (1, 128)
+
+    def create_population(self, count):
+        pop = []
+        for _ in range(0, count):
+            pop.append({'count': random.randint(*self.range), 'score': 0})
+        return pop
+
+    def breed(self, mother, father):
+        return {'count': (mother['count'] + father['count']) / 2, 'score': 0}
+
+    def mutate(self, n):
+        n['count'] = int(n['count'] + n['count'] * random.uniform(-1, 1))
+        return n
+
+    def evolve(self, pop):
+        # Sort on the scores.
+        graded = [x for x in sorted(pop, key=lambda x: x['score'], reverse=True)]
+
+        # Get the number we want to keep for the next gen.
+        retain_length = int(len(graded) * self.retain)
+
+        # The parents are every network we want to keep.
+        parents = graded[:retain_length]
+        result = []
+        # For those we aren't keeping, randomly keep some anyway.
+        for individual in graded[retain_length:]:
+            if self.random_select > random.random():
+                result.append(individual)
+        if self.random_create > random.random():
+            result.append({'count': random.randint(*self.range), 'score': 0})
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)

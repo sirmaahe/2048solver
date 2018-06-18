@@ -4,17 +4,17 @@ import logging
 
 
 class Network:
-    def __init__(self, nn_param_ranges=None):
+    def __init__(self, neurons=32):
         self.score = 0
         self.human_score = 0
-        self.nn_param_ranges = nn_param_ranges
+        self.neurons = neurons
         self.network = []
 
     def create_random(self):
-        network = [[[random.uniform(*[-1, 1]) for _ in range(16)] for _ in range(26)]]
+        network = [[[random.uniform(*[-1, 1]) for _ in range(16)] for _ in range(self.neurons)]]
 
         network.append([
-            [random.uniform(*[-1, 1]) for _ in range(26)]
+            [random.uniform(*[-1, 1]) for _ in range(self.neurons)]
             for _ in range(4)
         ])
         self.network = network
