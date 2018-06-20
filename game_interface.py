@@ -12,7 +12,7 @@ class Game:
         cells = []
         for item in self.grid:
             for i in item:
-                cells.append(i / 1024 if i else 0)
+                cells.append(i if i else 0)
         return cells
 
     @property
