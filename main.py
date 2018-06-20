@@ -1,13 +1,15 @@
 """Entry point to evolving the neural network. Start here."""
 import json
-from multiprocessing import Process, Manager
+import time
+from multiprocessing import Process, Manager, Pool
 from functools import reduce
 from game_interface import Game
 from optimizer import Optimizer
 from run import score
 
 
-def pool_score(network, game, i, return_dict):
+def pool_score(arg):
+    network, game, i, return_dict = arg
     try:
         return_dict[i] = score(network, game)
     except OverflowError:
@@ -35,20 +37,21 @@ def generate(generations, population, nn_param_choices):
 
     # Evolve the generation.
     i = 1
+    pool = Pool(5)
     while True:
         if i % 10 == 0:
             print("**Doing generation %d of %d**" % (i + 1, generations))
 
-        for j in range(0, len(networks)):
+        # for j in range(0, len(networks)):
             # jobs = []
             # for k in range(processes):
             #     jobs.append(
-            #         Process(target=pool_score, args=(networks[j + k].network, Game(), j + k, return_dict))
+        pool.map(pool_score, [(networks[j].network, Game(), j, return_dict) for j in range(0, len(networks))])
             #     )
             #
             # [p.start() for p in jobs]
             # [p.join() for p in jobs]
-            pool_score(networks[j].network, Game(), j, return_dict)
+            # pool_score(networks[j].network, Game(), j, return_dict)
         for k, v in return_dict.items():
             networks[k].human_score, networks[k].score = v
 
