@@ -8,16 +8,22 @@ from optimizer import Optimizer
 from run import score
 
 
-def pool_score(arg):
-    network, game, i, return_dict = arg
+def pool_score(network, game):
     try:
-        return_dict[i] = score(network, game)
+        return score(network, game)
     except OverflowError:
-        print('OverflowError')
-        return_dict[i] = (0, 0)
+        return 0, 0
 
 
-processes = 10
+def island(args):
+    networks, optimizer, i, return_dict = args
+    for p in range(50):
+        for n in networks:
+            n.human_score, n.score = pool_score(n.network, Game())
+
+        if p < 49:
+            networks = optimizer.evolve(networks)
+    return_dict[i] = networks
 
 
 def generate(generations, population, nn_param_choices):
@@ -31,53 +37,47 @@ def generate(generations, population, nn_param_choices):
 
     """
     optimizer = Optimizer(nn_param_choices)
-    networks = optimizer.create_population(population)
+    global_network = optimizer.create_population(population)
     processes_manager = Manager()
     return_dict = processes_manager.dict()
 
     # Evolve the generation.
     i = 1
-    pool = Pool(5)
+    pool = Pool(4)
     while True:
-        if i % 10 == 0:
+        start = time.time()
+        if i % 1 == 0:
             print("**Doing generation %d of %d**" % (i + 1, generations))
 
-        # for j in range(0, len(networks)):
-            # jobs = []
-            # for k in range(processes):
-            #     jobs.append(
-        pool.map(pool_score, [(networks[j].network, Game(), j, return_dict) for j in range(0, len(networks))])
-            #     )
-            #
-            # [p.start() for p in jobs]
-            # [p.join() for p in jobs]
-            # pool_score(networks[j].network, Game(), j, return_dict)
-        for k, v in return_dict.items():
-            networks[k].human_score, networks[k].score = v
+        pool.map(island, [
+            (global_network[int((r * population / 4)): int(((r + 1) * population / 4))],
+            optimizer, r, return_dict)
+        for r in range(4)])
 
-        # Get the average accuracy for this generation.
+        new_global_network = []
+        for r in range(4):
+            new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / 4)])
 
-        # Print out the average accuracy each generation.
-
-        if i % 10 == 0:
-            average_accuracy = reduce(lambda x, y: x + y, (n.human_score for n in networks)) / population
+        # if i % 10 == 0:
+        average_accuracy = reduce(lambda x, y: x + y, (n.human_score for n in new_global_network)) / population
+        if i % 1 == 0:
+            print('-'*80)
             print("Generation average: {}".format(average_accuracy))
+            print(time.time() - start)
             print('-'*80)
 
-        networks = optimizer.evolve(networks)
-        for network in networks:
-            network._score = None
+        global_network = optimizer.evolve(new_global_network)
 
         if i % 100 == 0:
             with open('./checkpoint.json', 'w') as checkpoint:
                 print("Writing checkpoint")
-                json.dump([n.network for n in networks], checkpoint)
+                json.dump([n.network for n in global_network], checkpoint)
         i += 1
     # Sort our final population.
-    networks = sorted(networks, key=lambda x: x.human_score, reverse=True)
+    # networks = sorted(networks, key=lambda x: x.human_score, reverse=True)
 
     # Print out the top 5 networks.
-    print([n.network for n in networks[:5]])
+    # print([n.network for n in networks[:5]])
 
 
 def main():
