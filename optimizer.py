@@ -22,7 +22,7 @@ class Optimizer:
     """Class that implements genetic algorithm for MLP optimization."""
 
     def __init__(self, nn_param_ranges, retain=0.15,
-                 random_select=0.05, random_create=1, mutate_chance=0.15):
+                 random_select=0.05, random_create=1, mutate_chance=0.15, n_range=(-1, 1)):
         """Create an optimizer.
 
         Args:
@@ -39,6 +39,7 @@ class Optimizer:
         self.random_select = random_select
         self.random_create = random_create
         self.retain = retain
+        self.n_range = n_range
         self.nn_param_ranges = nn_param_ranges
 
     def create_population(self, count):
