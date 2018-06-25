@@ -3,6 +3,7 @@ import json
 import time
 import random
 from math import e
+import numpy as np
 from multiprocessing import Process, Manager, Pool
 from functools import reduce
 from game_interface import Game
@@ -41,15 +42,16 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
     # Evolve the generation.
     i = 1
     res = 0
+    islands = 4
     for _ in range(generations):
         pool.map(island, [
-            (global_network[int((r * population / 4)): int(((r + 1) * population / 4))],
+            (global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
             optimizer, r, return_dict)
-        for r in range(4)])
+        for r in range(islands)])
 
         new_global_network = []
-        for r in range(4):
-            new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / 4)])
+        for r in range(islands):
+            new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / islands)])
 
         # if i % 10 == 0:
         average_accuracy = get_avg(new_global_network)
@@ -84,9 +86,9 @@ def main():
     }
     optimizer = Optimizer(nn_param_choices, n_range=(-5, 5))
     global_network = optimizer.create_population(population)
-    score, global_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
-    for i in reversed(range(2, 500, 1)):
-        new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
+    score, global_network = generate(generations, population, nn_param_choices, n_range=(-4, 4), global_network=global_network)
+    for i in reversed(np.arange(2, 500, 10)):
+        new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-4, 4), global_network=global_network)
         delta_score = new_score - score
         if delta_score > 0:
             global_network = new_network
