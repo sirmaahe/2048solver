@@ -3,7 +3,6 @@ import json
 import time
 import random
 from math import e
-import numpy as np
 from multiprocessing import Process, Manager, Pool
 from functools import reduce
 from game_interface import Game
@@ -86,7 +85,7 @@ def main():
     optimizer = Optimizer(nn_param_choices, n_range=(-5, 5))
     global_network = optimizer.create_population(population)
     score, global_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
-    for i in reversed(np.arange(2, 500, 1)):
+    for i in reversed(range(2, 500, 1)):
         new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
         delta_score = new_score - score
         if delta_score > 0:
