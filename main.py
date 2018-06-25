@@ -11,16 +11,15 @@ from optimizer import Optimizer
 from run import score
 
 
-def get_avg(n):
-    return reduce(lambda x, y: x + y, (n.human_score for n in n)) / len(n)
+def get_avg(net):
+    return reduce(lambda x, y: x + y, (n.human_score for n in net)) / len(net)
 
 
-def pool_score(args):
-    network, game, j, return_dict = args
+def pool_score(network, game):
     try:
-        return_dict[j] = score(network, game)
+        return score(network, game)
     except OverflowError:
-        return_dict[j] = 0, 0
+        return 0, 0
 
 
 def island(args):
@@ -29,6 +28,7 @@ def island(args):
         for n in networks:
             n.human_score, n.score = pool_score(n.network, Game())
 
+        if p < 49:
             networks = optimizer.evolve(networks)
     return_dict[i] = networks
 
@@ -41,15 +41,25 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
 
     # Evolve the generation.
     i = 1
-    while True:
-        pool.map(pool_score, [(global_network[j].network, Game(), j, return_dict) for j in range(0, len(global_network))])
+    res = 0
+    for _ in range(generations):
+        pool.map(island, [
+            (global_network[int((r * population / 4)): int(((r + 1) * population / 4))],
+            optimizer, r, return_dict)
+        for r in range(4)])
 
-        for k, v in return_dict.items():
-            global_network[k].human_score, global_network[k].score = v
+        new_global_network = []
+        for r in range(4):
+            new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / 4)])
 
-        if i != generations - 1:
-            global_network = optimizer.evolve(global_network)
-            print("{}: {}".format(i, get_avg(global_network)))
+        # if i % 10 == 0:
+        average_accuracy = get_avg(new_global_network)
+        res += average_accuracy
+        if i % 2 == 0:
+            print("Generation average: {}".format(average_accuracy))
+
+        if i < population - 1:
+            global_network = optimizer.evolve(new_global_network)
         i += 1
 
     with open('./checkpoint.json', 'w') as checkpoint:
@@ -60,12 +70,12 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
 
     # Print out the top 5 networks.
     # print([n.network for n in networks[:5]])
-    return global_network
+    return res/generations, global_network
 
 
 def main():
     """Evolve a network."""
-    generations = 100  # Number of times to evole the population.
+    generations = 5  # Number of times to evole the population.
     population = 40  # Number of networks in each generation.
 
     nn_param_choices = {
@@ -75,16 +85,18 @@ def main():
     }
     optimizer = Optimizer(nn_param_choices, n_range=(-5, 5))
     global_network = optimizer.create_population(population)
-    global_network = generate(generations, population, nn_param_choices, n_range=(-1, 1), global_network=global_network)
-    for i in reversed(np.arange(0, 2, 0.1)):
-        global_network = generate(generations, population, nn_param_choices, n_range=(-1, 1), global_network=global_network)
-        # delta_score = get_avg(new_network) - get_avg(global_network)
-        # if delta_score > 0:
-        #     global_network = new_network
-        # elif pow(e, delta_score/i) > random.random():
-        #     global_network = new_network
+    score, global_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
+    for i in reversed(np.arange(2, 500, 1)):
+        new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
+        delta_score = new_score - score
+        if delta_score > 0:
+            global_network = new_network
+            score = new_score
+        elif pow(e, delta_score/i) > random.random():
+            global_network = new_network
+            score = new_score
         print('-'*80)
-        print("{}: {}".format(i, get_avg(global_network)))
+        print("{}: {}".format(i, score))
         print('-'*80)
 
 
