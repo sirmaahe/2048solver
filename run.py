@@ -1,4 +1,5 @@
 import math
+import numba
 from functools import reduce
 from operator import add
 
@@ -6,6 +7,7 @@ from operator import add
 DIRECTIONS = ['up', 'down', 'left', 'right']
 
 
+@numba.vectorize(["float32(float32)"], target="cuda")
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 

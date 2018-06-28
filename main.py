@@ -23,35 +23,36 @@ def pool_score(network, game):
 
 
 def island(args):
-    networks, optimizer, i, return_dict = args
+    networks, optimizer, i, d = args
     for p in range(50):
         for n in networks:
             n.human_score, n.score = pool_score(n.network, Game())
 
         if p < 49:
             networks = optimizer.evolve(networks)
-    return_dict[i] = networks
+    d[i] = networks
 
-pool = Pool(4)
+# pool = Pool(8)
 
 def generate(generations, population, nn_param_choices, n_range, global_network):
     optimizer = Optimizer(nn_param_choices, n_range=n_range)
-    processes_manager = Manager()
-    return_dict = processes_manager.dict()
+    # processes_manager = Manager()
+    # return_dict = processes_manager.dict()
+    d = dict()
 
     # Evolve the generation.
     i = 1
     res = 0
-    islands = 4
+    islands = 8
     for _ in range(generations):
-        pool.map(island, [
-            (global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
-            optimizer, r, return_dict)
-        for r in range(islands)])
-
+        [
+            island((global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
+            optimizer, r, d))
+        for r in range(islands)]
+        print(d)
         new_global_network = []
         for r in range(islands):
-            new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / islands)])
+            new_global_network.extend(sorted(d[r], key=lambda x: x.score, reverse=True)[:int(population / islands)])
 
         # if i % 10 == 0:
         average_accuracy = get_avg(new_global_network)
@@ -76,7 +77,7 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
 
 def main():
     """Evolve a network."""
-    generations = 5  # Number of times to evole the population.
+    generations = 1  # Number of times to evole the population.
     population = 40  # Number of networks in each generation.
 
     nn_param_choices = {
@@ -86,19 +87,20 @@ def main():
     }
     optimizer = Optimizer(nn_param_choices, n_range=(-5, 5))
     global_network = optimizer.create_population(population)
-    score, global_network = generate(generations, population, nn_param_choices, n_range=(-4, 4), global_network=global_network)
-    for i in reversed(np.arange(2, 500, 10)):
-        new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-4, 4), global_network=global_network)
-        delta_score = new_score - score
-        if delta_score > 0:
-            global_network = new_network
-            score = new_score
-        elif pow(e, delta_score/i) > random.random():
-            global_network = new_network
-            score = new_score
-        print('-'*80)
-        print("{}: {}".format(i, score))
-        print('-'*80)
+    prev_score, global_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
+    # for i in reversed(np.arange(2, 100, 1)):
+    #     new_score, new_network = generate(generations, population, nn_param_choices, n_range=(-2, 2), global_network=global_network)
+    #     delta_score = new_score - prev_score
+    #     if delta_score > 0:
+    #         global_network = new_network
+    #         prev_score = new_score
+    #     elif pow(e, delta_score/i) > random.random():
+    #         global_network = new_network
+    #         prev_score = new_score
+    #     print('-'*80)
+    #     print(delta_score, i, pow(e, delta_score/i))
+    #     print("{}: {}".format(i, prev_score))
+    #     print('-'*80)
 
 
 if __name__ == '__main__':

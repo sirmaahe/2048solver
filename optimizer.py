@@ -87,7 +87,7 @@ class Optimizer:
                 for m_n, f_n in zip(m_l, f_l):
                     neuron = []
                     for m_w, f_w in zip(m_n, f_n):
-                        neuron.append((m_w + f_w) / 2)
+                        neuron.append(random.choice([m_w, f_w]))
                     layer.append(neuron)
                 child.append(layer)
 
