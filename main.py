@@ -32,7 +32,7 @@ def island(args):
             networks = optimizer.evolve(networks)
     return_dict[i] = networks
 
-pool = Pool(4)
+pool = Pool(8)
 
 def generate(generations, population, nn_param_choices, n_range, global_network):
     optimizer = Optimizer(nn_param_choices, n_range=n_range)
@@ -42,7 +42,7 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
     # Evolve the generation.
     i = 1
     res = 0
-    islands = 4
+    islands = 8
     for _ in range(generations):
         pool.map(island, [
             (global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
@@ -77,7 +77,7 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
 def main():
     """Evolve a network."""
     generations = 5  # Number of times to evole the population.
-    population = 40  # Number of networks in each generation.
+    population = 80  # Number of networks in each generation.
 
     nn_param_choices = {
         # 'neurons': [1, 64],

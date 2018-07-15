@@ -136,7 +136,7 @@ class Optimizer:
         retain_length = int(len(graded) * self.retain)
 
         # The parents are every network we want to keep.
-        if len(graded) < 40:
+        if len(graded) < 80:
             parents = graded[:]
         else:
             parents = graded[:retain_length]
@@ -152,7 +152,7 @@ class Optimizer:
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)
-        desired_length = 40 - len(result)
+        desired_length = 80 - len(result)
         children = []
 
         # Add children, which are bred from two remaining networks.
