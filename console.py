@@ -7,51 +7,6 @@ import random
 import functools
 
 
-def _getch_windows(prompt):
-    """
-    Windows specific version of getch.  Special keys like arrows actually post
-    two key events.  If you want to use these keys you can create a dictionary
-    and return the result of looking up the appropriate second key within the
-    if block.
-    """
-    print(prompt, end="")
-    key = msvcrt.getch()
-    if ord(key) == 224:
-        key = msvcrt.getch()
-        return key
-    print(key.decode())
-    return key.decode()
-
-
-def _getch_linux(prompt):
-    """Linux specific version of getch."""
-    print(prompt, end="")
-    sys.stdout.flush()
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
-    new = termios.tcgetattr(fd)
-    new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
-    new[6][termios.VMIN] = 1
-    new[6][termios.VTIME] = 0
-    termios.tcsetattr(fd, termios.TCSANOW, new)
-    char = None
-    try:
-        char = os.read(fd, 1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSAFLUSH, old)
-    print(char)
-    return char
-
-
-#Set version of getch to use based on operating system.
-if sys.platform[:3] == 'win':
-    import msvcrt
-    getch = _getch_windows
-else:
-    import termios
-    getch = _getch_linux
-
-
 def push_row(row, score, left=True):
     """Push all tiles in one row; like tiles will be merged together."""
     row = row[:] if left else row[::-1]
@@ -94,7 +49,7 @@ def push_all_columns(grid, score, up=True):
     Pass up=True for up and up=False for down.
     The grid will be changed inplace.
     """
-    for i,val in enumerate(grid[0]):
+    for i, _ in enumerate(grid[0]):
         column = get_column(grid, i)
         new = push_row(column, score, up)
         set_column(grid, i, new)
@@ -117,7 +72,7 @@ def any_possible_moves(grid):
     for row in grid:
         if any(row[i]==row[i+1] for i in range(len(row)-1)):
             return True
-    for i,val in enumerate(grid[0]):
+    for i, _ in enumerate(grid[0]):
         column = get_column(grid, i)
         if any(column[i]==column[i+1] for i in range(len(column)-1)):
             return True
@@ -143,17 +98,6 @@ def prepare_next_turn(grid):
     y,x = random.choice(empties)
     grid[y][x] = 2 if random.random() < 0.9 else 4
     return any_possible_moves(grid)
-
-
-def print_grid(grid):
-    """Print a pretty grid to the screen."""
-    print("")
-    wall = "+------"*len(grid[0])+"+"
-    print(wall)
-    for row in grid:
-        meat = "|".join("{:^6}".format(val) for val in row)
-        print("|{}|".format(meat))
-        print(wall)
 
 
 functions = {"a" : functools.partial(push_all_rows, left=True),

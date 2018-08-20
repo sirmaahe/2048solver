@@ -11,6 +11,15 @@ from optimizer import Optimizer
 from run import score
 
 
+def print_network(network):
+    for l in network:
+        for n in l:
+            for w in n:
+                print('{:7.2f}'.format(w), end='\t')
+            print('')
+    print('\n')
+
+
 def get_avg(net):
     return reduce(lambda x, y: x + y, (n.human_score for n in net)) / len(net)
 
@@ -61,6 +70,8 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
 
         if i < population - 1:
             global_network = optimizer.evolve(new_global_network)
+
+        # print_network(list(sorted(global_network, key=lambda x: x.score, reverse=True))[0].network)
         i += 1
 
     with open('./checkpoint.json', 'w') as checkpoint:
