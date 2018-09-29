@@ -1,4 +1,6 @@
 import math
+import time
+import numpy as np
 from functools import reduce
 from operator import add
 
@@ -20,6 +22,7 @@ def calculate_neuron(prev, weights):
 def score(network, game):
     prev_elements = []
     steps = 1
+    stime = time.time()
     while True:
         prev_layer = game.elements
         current_elements = game.elements
@@ -28,12 +31,12 @@ def score(network, game):
             break
         else:
             prev_elements = current_elements
-
-        for layer in network:
-            prev_layer = [calculate_neuron([1] + prev_layer, n) for n in layer]
-
-        max_neuron = max(enumerate(prev_layer), key=lambda x: x[1])
+        prev_layer = np.asarray(prev_layer)
+        prev_layer = np.asarray([prev_layer])
+        scoring = network.predict(prev_layer, batch_size=1028)
+        max_neuron = max(enumerate(scoring[0]), key=lambda x: x[1])
         direction = DIRECTIONS[max_neuron[0]]
         game.move(direction)
         steps += 1
+    print(time.time() - stime)
     return game.score, game.score

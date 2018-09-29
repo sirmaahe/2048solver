@@ -41,7 +41,7 @@ def island(args):
             networks = optimizer.evolve(networks)
     return_dict[i] = networks
 
-pool = Pool(8)
+pool = Pool(4)
 
 def generate(generations, population, nn_param_choices, n_range, global_network):
     optimizer = Optimizer(nn_param_choices, n_range=n_range)
@@ -51,13 +51,14 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
     # Evolve the generation.
     i = 1
     res = 0
-    islands = 8
+    islands = 4
     for _ in range(generations):
-        pool.map(island, [
-            (global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
-            optimizer, r, return_dict)
-        for r in range(islands)])
-
+        # pool.map(island, [
+        #     (global_network[int((r * population / islands)): int(((r + 1) * population / islands))],
+        #     optimizer, r, return_dict)
+        # for r in range(islands)])
+        for r in range(islands):
+            island([global_network[int((r * population / islands)): int(((r + 1) * population / islands))], optimizer, r, return_dict])
         new_global_network = []
         for r in range(islands):
             new_global_network.extend(sorted(return_dict[r], key=lambda x: x.score, reverse=True)[:int(population / islands)])
@@ -74,9 +75,9 @@ def generate(generations, population, nn_param_choices, n_range, global_network)
         # print_network(list(sorted(global_network, key=lambda x: x.score, reverse=True))[0].network)
         i += 1
 
-    with open('./checkpoint.json', 'w') as checkpoint:
-        print("Writing checkpoint")
-        json.dump([n.network for n in global_network], checkpoint)
+    # with open('./checkpoint.json', 'w') as checkpoint:
+    #     print("Writing checkpoint")
+    #     json.dump([n.network for n in global_network], checkpoint)
     # Sort our final population.
     # networks = sorted(networks, key=lambda x: x.human_score, reverse=True)
 

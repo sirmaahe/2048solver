@@ -1,5 +1,6 @@
 """Class that represents the network to be evolved."""
-import random
+from keras.models import Sequential
+from keras.layers import Dense, InputLayer
 import logging
 
 
@@ -11,12 +12,11 @@ class Network:
         self.network = []
 
     def create_random(self):
-        network = [[[random.uniform(*[-1, 1]) for _ in range(17)] for _ in range(33)]]
-
-        network.append([
-            [random.uniform(*[-1, 1]) for _ in range(33)]
-            for _ in range(4)
-        ])
+        network = Sequential()
+        # network.add(InputLayer(batch_input_shape=(16,)))
+        network.add(Dense(22, input_shape=(16,), activation='sigmoid'))
+        network.add(Dense(4, activation='sigmoid'))
+        network.compile('adam', loss='mse')
         self.network = network
 
     def create_set(self, network):
