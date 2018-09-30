@@ -7,6 +7,7 @@ Credit:
 """
 import os.path
 import json
+import itertools
 import random
 from itertools import zip_longest
 from network import Network
@@ -82,7 +83,9 @@ class Optimizer:
         children = []
         for _ in range(2):
             child = []
-            for m_l, f_l in zip(mother.network, father.network):
+            m_weigths = [itertools.chain(l.get_weights()) for l in mother.network.layers]
+            f_weigths = [itertools.chain(l.get_weights()) for l in father.network.layers]
+            for m_l, f_l in zip(m_weigths, f_weigths):
                 layer = []
                 for m_n, f_n in zip(m_l, f_l):
                     neuron = []

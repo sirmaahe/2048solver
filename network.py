@@ -20,6 +20,7 @@ class Network:
         self.network = network
 
     def create_set(self, network):
+
         self.network = network
 
     def print_network(self):
