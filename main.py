@@ -3,7 +3,7 @@ import gym
 import numpy as np
 from keras.models import Sequential
 from rl.agents.dqn import DQNAgent
-from rl.memory import Memory
+from rl.memory import SequentialMemory
 from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 from keras.optimizers import Adam
@@ -37,7 +37,7 @@ class Env2014(gym.Env):
         reward = self.game.score
         self.game.move(DIRECTIONS[action])
         ob2 = self.game.elements
-        return ob2, reward, ob == ob2, {}
+        return ob2, self.game.score - reward, ob == ob2, {}
 
     def reset(self):
         self.game = Game()
@@ -57,7 +57,7 @@ def main():
     policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
                                   nb_steps=1000000)
 
-    memory = Memory(window_length=0)
+    memory = SequentialMemory(window_length=1, limit=1000000)
     space = gym.spaces.Discrete(4)
     dqn = DQNAgent(model=model, nb_actions=space.n, policy=policy, memory=memory,
                    nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
