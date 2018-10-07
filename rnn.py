@@ -1,12 +1,12 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers import Dropout
 from keras.layers import LSTM
+from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
 #Read the data, turn it into lower case
-data = open("Othello.txt").read().lower()
+data = open("text.txt").read().lower()
 #This get the set of characters used in the data and sorts them
 chars = sorted(list(set(data)))
 #Total number of characters used in the data
@@ -58,16 +58,17 @@ X = X/float(numberOfUniqueChars)
 y = np_utils.to_categorical(y)
 print(y)
 
+checkpoint = ModelCheckpoint('check.hbf5', monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+callbacks_list = [checkpoint]
 
 model = Sequential()
 #Since we know the shape of our Data we can input the timestep and feature data
 #The number of timestep sequence are dealt with in the fit function
 model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
-model.add(Dropout(0.2))
 #number of features on the output
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-model.fit(X, y, epochs=5, batch_size=128)
+model.fit(X, y, epochs=1, batch_size=256, callbacks=callbacks_list)
 model.save_weights("Othello.hdf5")
 # model.load_weights("Othello.hdf5")
 
