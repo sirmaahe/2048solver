@@ -1,7 +1,7 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers import LSTM
+from keras.layers import LSTM, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
@@ -65,11 +65,12 @@ model = Sequential()
 #Since we know the shape of our Data we can input the timestep and feature data
 #The number of timestep sequence are dealt with in the fit function
 model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
+model.add(Dropout(0.2))
 #number of features on the output
 model.add(Dense(y.shape[1], activation='softmax'))
 model.load_weights("Othello.hdf5")
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-model.fit(X, y, epochs=1, batch_size=256, callbacks=callbacks_list)
+model.fit(X, y, epochs=1, batch_size=3072, callbacks=callbacks_list)
 model.save_weights("Othello.hdf5", overwrite=True)
 # model.load_weights("Othello.hdf5")
 
