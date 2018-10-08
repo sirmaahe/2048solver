@@ -67,9 +67,10 @@ model = Sequential()
 model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
 #number of features on the output
 model.add(Dense(y.shape[1], activation='softmax'))
+model.load_weights("Othello.hdf5")
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 model.fit(X, y, epochs=1, batch_size=256, callbacks=callbacks_list)
-model.save_weights("Othello.hdf5")
+model.save_weights("Othello.hdf5", overwrite=True)
 # model.load_weights("Othello.hdf5")
 
 randomVal = np.random.randint(0, len(charX)-1)
@@ -78,7 +79,6 @@ for i in range(500):
     x = np.reshape(randomStart, (1, len(randomStart), 1))
     x = x/float(numberOfUniqueChars)
     pred = model.predict(x)
-    print(pred)
     index = np.argmax(pred)
     randomStart.append(index)
     randomStart = randomStart[1: len(randomStart)]
