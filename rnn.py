@@ -5,8 +5,19 @@ from keras.layers import LSTM, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
+
+def softmax(z):
+    assert len(z.shape) == 2
+    s = np.max(z, axis=1)
+    s = s[:, np.newaxis] # necessary step to do broadcasting
+    e_x = np.exp(z - s)
+    div = np.sum(e_x, axis=1)
+    div = div[:, np.newaxis] # dito
+    return e_x / div
+
+
 #Read the data, turn it into lower case
-data = open("text.txt").read().lower()
+data = open("text2.txt").read().lower()
 #This get the set of characters used in the data and sorts them
 chars = sorted(list(set(data)))
 #Total number of characters used in the data
@@ -21,7 +32,7 @@ CharsForids = {char:Id for Id, char in enumerate(chars)}
 idsForChars = {Id:char for Id, char in enumerate(chars)}
 
 #How many timesteps e.g how many characters we want to process in one go
-numberOfCharsToLearn = 100
+numberOfCharsToLearn = 120
 
 #Since our timestep sequence represetns a process for every 100 chars we omit
 #the first 100 chars so the loop runs a 100 less or there will be index out of
@@ -56,31 +67,30 @@ X = X/float(numberOfUniqueChars)
 
 #This sets it up for us so we can have a categorical(#feature) output format
 y = np_utils.to_categorical(y)
-print(y)
 
-checkpoint = ModelCheckpoint('check.hbf5', monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+checkpoint = ModelCheckpoint('weights-improvement-{epoch:02d}.hdf5', monitor='loss', verbose=1, save_best_only=True, mode='max')
 callbacks_list = [checkpoint]
 
 model = Sequential()
 #Since we know the shape of our Data we can input the timestep and feature data
 #The number of timestep sequence are dealt with in the fit function
 model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
-model.add(Dropout(0.2))
+model.add(Dropout(0.3))
 #number of features on the output
 model.add(Dense(y.shape[1], activation='softmax'))
-model.load_weights("Othello.hdf5")
+model.load_weights("rnn.hdf5")
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-model.fit(X, y, epochs=1, batch_size=3072, callbacks=callbacks_list)
-model.save_weights("Othello.hdf5", overwrite=True)
-# model.load_weights("Othello.hdf5")
+model.fit(X, y, validation_split=0.33, epochs=5, batch_size=2048, callbacks=callbacks_list)
+model.save_weights("rnn.hdf5", overwrite=True)
 
 randomVal = np.random.randint(0, len(charX)-1)
 randomStart = charX[randomVal]
-for i in range(500):
+for i in range(501):
     x = np.reshape(randomStart, (1, len(randomStart), 1))
     x = x/float(numberOfUniqueChars)
     pred = model.predict(x)
-    index = np.argmax(pred)
+    pred = softmax(pred)[0]
+    index = list(pred).index(max(list(pred)))
     randomStart.append(index)
     randomStart = randomStart[1: len(randomStart)]
 print("".join([idsForChars[value] for value in randomStart]))
