@@ -1,7 +1,7 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers import LSTM, Dropout
+from keras.layers import CuDNNLSTM, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
@@ -68,19 +68,19 @@ X = X/float(numberOfUniqueChars)
 #This sets it up for us so we can have a categorical(#feature) output format
 y = np_utils.to_categorical(y)
 
-checkpoint = ModelCheckpoint('weights-improvement-{epoch:02d}.hdf5', monitor='loss', verbose=1, save_best_only=True, mode='max')
+checkpoint = ModelCheckpoint('weights-improvement-{epoch:02d}.hdf5', monitor='loss', verbose=1, )
 callbacks_list = [checkpoint]
 
 model = Sequential()
 #Since we know the shape of our Data we can input the timestep and feature data
 #The number of timestep sequence are dealt with in the fit function
-model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
+model.add(CuDNNLSTM(256, input_shape=(X.shape[1], X.shape[2])))
 model.add(Dropout(0.3))
 #number of features on the output
 model.add(Dense(y.shape[1], activation='softmax'))
 model.load_weights("rnn.hdf5")
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-model.fit(X, y, validation_split=0.33, epochs=5, batch_size=2048, callbacks=callbacks_list)
+model.fit(X, y, validation_split=0.33, epochs=5, batch_size=256, callbacks=callbacks_list)
 model.save_weights("rnn.hdf5", overwrite=True)
 
 randomVal = np.random.randint(0, len(charX)-1)
@@ -89,8 +89,8 @@ for i in range(501):
     x = np.reshape(randomStart, (1, len(randomStart), 1))
     x = x/float(numberOfUniqueChars)
     pred = model.predict(x)
-    pred = softmax(pred)[0]
-    index = list(pred).index(max(list(pred)))
+    # pred = softmax(pred)[0]
+    index = np.random.choice(len(pred[0]), 1, p=pred[0])[0]
     randomStart.append(index)
     randomStart = randomStart[1: len(randomStart)]
 print("".join([idsForChars[value] for value in randomStart]))
