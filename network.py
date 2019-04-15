@@ -15,9 +15,19 @@ class Network:
 
         network.append([
             [random.uniform(*[-1, 1]) for _ in range(33)]
+            for _ in range(5)
+        ])
+
+        sec_network = [[[random.uniform(*[-1, 1]) for _ in range(17)] for _ in range(33)]]
+
+        sec_network.append([
+            [random.uniform(*[-1, 1]) for _ in range(33)]
             for _ in range(4)
         ])
-        self.network = network
+        self.network = (network, sec_network)
+
+    def add_set(self, network):
+        self.network.append(network)
 
     def create_set(self, network):
         self.network = network

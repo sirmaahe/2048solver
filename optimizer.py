@@ -80,21 +80,22 @@ class Optimizer:
 
     def breed(self, mother, father):
         children = []
-        for _ in range(2):
-            child = []
-            for m_l, f_l in zip(mother.network, father.network):
-                layer = []
-                for m_n, f_n in zip(m_l, f_l):
-                    neuron = []
-                    for m_w, f_w in zip(m_n, f_n):
-                        neuron.append((m_w + f_w) / 2)
-                    layer.append(neuron)
-                child.append(layer)
-
+        for i in range(2):
             network = Network(self.nn_param_ranges)
-            network.create_set(child)
+            for _ in range(2):
+                child = []
+                for m_l, f_l in zip(mother.network[i], father.network[i]):
+                    layer = []
+                    for m_n, f_n in zip(m_l, f_l):
+                        neuron = []
+                        for m_w, f_w in zip(m_n, f_n):
+                            neuron.append((m_w + f_w) / 2)
+                        layer.append(neuron)
+                    child.append(layer)
 
-            # Randomly mutate some of the children.
+                network.add_set(child)
+
+                # Randomly mutate some of the children.
             network = self.mutate(network)
 
             children.append(network)
@@ -111,12 +112,13 @@ class Optimizer:
             (Network): A randomly mutated network object
 
         """
-        network = n.network
-        for i, layer in enumerate(network):
-            for j, neuron in enumerate(layer):
-                for k, weight in enumerate(neuron):
-                    if random.random() <= self.mutate_chance:
-                        neuron[k] = weight + weight * random.uniform(-1, 1)
+        networks = n.network
+        for network in networks:
+            for i, layer in enumerate(network):
+                for j, neuron in enumerate(layer):
+                    for k, weight in enumerate(neuron):
+                        if random.random() <= self.mutate_chance:
+                            neuron[k] = weight + weight * random.uniform(-1, 1)
         return n
 
     def evolve(self, pop):

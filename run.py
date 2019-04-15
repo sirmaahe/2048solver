@@ -3,7 +3,7 @@ from functools import reduce
 from operator import add
 
 
-DIRECTIONS = ['up', 'down', 'left', 'right']
+DIRECTIONS = ['up', 'down', 'left', 'right', 'next']
 
 
 def sigmoid(x):
@@ -29,11 +29,20 @@ def score(network, game):
         else:
             prev_elements = current_elements
 
-        for layer in network:
+        for layer in network[0]:
             prev_layer = [calculate_neuron([1] + prev_layer, n) for n in layer]
 
         max_neuron = max(enumerate(prev_layer), key=lambda x: x[1])
         direction = DIRECTIONS[max_neuron[0]]
-        game.move(direction)
+        if direction == 'next':
+            prev_layer = game.elements
+            for layer in network[1]:
+                prev_layer = [calculate_neuron([1] + prev_layer, n) for n in layer]
+
+            max_neuron = max(enumerate(prev_layer[:4]), key=lambda x: x[1])
+            direction = DIRECTIONS[max_neuron[0]]
+            game.move(direction)
+        else:
+            game.move(direction)
         steps += 1
     return game.score, game.score
